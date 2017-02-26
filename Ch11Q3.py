@@ -44,8 +44,31 @@ for i in range(N):
     e = sigma* np.random.normal(0,1)
     y[i,0] = beta1 + beta2*x[i,1] + e
 
-# Turn data into dataframes    
-x = pd.DataFrame(x)
-y = pd.DataFrame(y)
-data = pd.concat((y,x), axis = 1)
+data = np.concatenate((y,x), axis = 1)
 
+#%% Posterior mean
+"""
+Now, we calculate the posterior meand and standard deviation for the slope 
+coefficient beta2 for this data set.
+We do this using a normal-gamma prior with beta_ = [0 1]'
+V_ = I2, s^-2 =1 and nu = 1
+"""
+k = x.ndim # set the number of dimensions for x
+# Initialize our hyper parameters, using 0 to denote hyperparameters for prior
+v_0 = 1
+s2inv_0 = 1
+s02 = 1/s2inv_0
+b0 = np.zeros((k,1), dtype=np.float64)
+b0[k-1,0] = 1 # set value to 1
+c = 1
+capv0 = c*np.identity(k, dtype=float)
+
+
+# Parameters for Normal Gamma Posterior
+# first, do some OLS since some posterior results are written in terms of OLS
+xsquare = np.dot(x.transpose(), x)
+xsquare_inv = np.linalg.inv(xsquare)
+
+bols = (xsquare_inv @ x.transpose()) @ y # simple OLS
+s2 = np.transpose(y - x@bols)@(y-x@bols)/(N-k) # SSE / (N - k)
+v= N - k
